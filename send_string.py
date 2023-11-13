@@ -135,9 +135,6 @@ if __name__ == "__main__":
         modifiers = [ 0, 0, 0, 0, 0, 0, 0, 1 ]
         dc.send_key_down(scancode, modifiers)
         dc.send_key_up()
-  #      time.sleep(0.5)
-#        dc.send_key_down(scancode, modifiers)
- #       dc.send_key_up()
         time.sleep(2)
 
     if prefix == "windows":
@@ -146,7 +143,7 @@ if __name__ == "__main__":
         modifiers = [ 0, 0, 0, 0, 0, 0, 0, 0 ]
         dc.send_key_down(scancode, modifiers)
         dc.send_key_up()
-        time.sleep(1)
+        time.sleep(3)
         dc.send_string("cmd")
         time.sleep(1)
         scantablekey = "KEY_ENTER"
