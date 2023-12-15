@@ -50,6 +50,8 @@ class BTKbDevice():
         os.system("hciconfig " + BTKbDevice.MY_INTERFACE + " name \"" + BTKbDevice.MY_DEV_NAME + "\"")
         # make the device discoverable
         os.system("hciconfig " + BTKbDevice.MY_INTERFACE + " piscan")
+        # temporary patch
+        os.system("sed -i '/NOPLUGIN_OPTION=\"\"/d' /etc/init.d/bluetooth")
 
     # set up a bluez profile to advertise device capabilities from a loaded service record
     def init_bluez_profile(self):
