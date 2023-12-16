@@ -159,7 +159,7 @@ if __name__ == "__main__":
             modifiers = [ 0, 0, 0, 0, 0, 0, 0, 0 ]
             dc.send_key_down(scancode, modifiers)
             dc.send_key_up()
-            time.sleep(1)
+            time.sleep(2)
             dc.send_string("\n")
 
         if uac == "win8":
@@ -168,39 +168,32 @@ if __name__ == "__main__":
             modifiers = [ 0, 0, 0, 0, 0, 0, 0, 0 ]
             dc.send_key_down(scancode, modifiers)
             dc.send_key_up()
-            time.sleep(1)
+            time.sleep(2)
             dc.send_string("\n")
 
         if uac == "win10":
-            scantablekey = "KEY_DOWN"
+            scantablekey = "KEY_LEFT"
             scancode = keymap.keytable[scantablekey]
             modifiers = [ 0, 0, 0, 0, 0, 0, 0, 0 ]
             dc.send_key_down(scancode, modifiers)
             dc.send_key_up()
             time.sleep(2)
             dc.send_string("\n")
-            scantablekey = "KEY_LEFT"
-            scancode = keymap.keytable[scantablekey]
-            modifiers = [ 0, 0, 0, 0, 0, 0, 0, 0 ]
-            dc.send_key_down(scancode, modifiers)
-            dc.send_key_up()
-            time.sleep(1)
-            dc.send_string("\n")
 
-        if uac == "win10":
+        if uac == "win11":
             scantablekey = "KEY_DOWN"
             scancode = keymap.keytable[scantablekey]
             modifiers = [ 0, 0, 0, 0, 0, 0, 0, 0 ]
             dc.send_key_down(scancode, modifiers)
             dc.send_key_up()
-            time.sleep(2)
+            time.sleep(1)
             dc.send_string("\n")
             scantablekey = "KEY_LEFT"
             scancode = keymap.keytable[scantablekey]
             modifiers = [ 0, 0, 0, 0, 0, 0, 0, 0 ]
             dc.send_key_down(scancode, modifiers)
             dc.send_key_up()
-            time.sleep(1)
+            time.sleep(2)
             dc.send_string("\n")
 
     if prefix == "mac":
