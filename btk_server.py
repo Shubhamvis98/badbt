@@ -25,9 +25,9 @@ logging.basicConfig(level=logging.DEBUG)
 
 class BTKbDevice():
     # change these constants
-    MY_ADDRESS = "22:22:EA:CF:3C:1E"
     MY_DEV_NAME = "My Keyboard"
     MY_INTERFACE = "hci0"
+    MY_ADDRESS = os.popen(f'hciconfig {MY_INTERFACE}').read().split()[7]
 
     # define some constants
     P_CTRL = 17  # Service port - must match port configured in SDP record
@@ -45,11 +45,11 @@ class BTKbDevice():
     # configure the bluetooth hardware device
     def init_bt_device(self):
         print("3. Configuring Device name " + BTKbDevice.MY_DEV_NAME)
-        # temporary patch
-        with open('/etc/init.d/bluetooth') as f:
-            if 'NOPLUGIN_OPTION=""' in f.read():
-                print('** Fixing bluetooth service patch and restarting.. **'),
-                os.system("sed -i '/NOPLUGIN_OPTION=\"\"/d' /etc/init.d/bluetooth && service bluetooth restart")
+        # # temporary patch
+        # with open('/etc/init.d/bluetooth') as f:
+        #     if 'NOPLUGIN_OPTION=""' in f.read():
+        #         print('** Fixing bluetooth service patch and restarting.. **'),
+        #         os.system("sed -i '/NOPLUGIN_OPTION=\"\"/d' /etc/init.d/bluetooth && service bluetooth restart")
         # set the device class to a keybord and set the name
         os.system("hciconfig " + BTKbDevice.MY_INTERFACE + " up")
         os.system("hciconfig " + BTKbDevice.MY_INTERFACE + " name \"" + BTKbDevice.MY_DEV_NAME + "\"")
