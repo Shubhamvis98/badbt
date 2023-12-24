@@ -157,13 +157,14 @@ if __name__ == "__main__":
     if not os.geteuid() == 0:
         sys.exit("[!]Run as root")
 
-    bt_name = if_name = None
+    bt_name='Keyboard'
+    if_name='hci0'
     sopts = 'hn:i:'
     opts, args = getopt.getopt(sys.argv[1:], sopts)
 
     for opt, arg in opts:
         if opt == '-h':
-            print(f'\nUsage:\n\tpython {sys.argv[0]} -n [BT_NAME] -i [INTERFACE]\n\n\tDefault Values:\n\t\tBT_NAME: Keyboard\n\t\tINTERFACE: hci0')
+            print(f'\nUsage:\n\tpython {sys.argv[0]} -n [BT_NAME] -i [INTERFACE]\n\n\tDefault Values:\n\t\tBT_NAME:\t{bt_name}\n\t\tINTERFACE:\t{if_name}')
             sys.exit()
         elif opt == '-n':
             bt_name = arg
@@ -172,7 +173,7 @@ if __name__ == "__main__":
 
     try:
         DBusGMainLoop(set_as_default=True)
-        myservice = BTKbService(bt_name='Keyboard', if_name='hci0')
+        myservice = BTKbService(bt_name, if_name)
         loop = GLib.MainLoop()
         loop.run()
     except KeyboardInterrupt:
