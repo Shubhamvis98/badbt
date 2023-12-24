@@ -44,11 +44,11 @@ class BTKbDevice():
     # configure the bluetooth hardware device
     def init_bt_device(self):
         print("3. Configuring Device name: " + self.bt_name)
-        # # temporary patch
-        # with open('/etc/init.d/bluetooth') as f:
-        #     if 'NOPLUGIN_OPTION=""' in f.read():
-        #         print('** Fixing bluetooth service patch and restarting.. **'),
-        #         os.system("sed -i '/NOPLUGIN_OPTION=\"\"/d' /etc/init.d/bluetooth && service bluetooth restart")
+        # temporary patch
+        with open('/etc/init.d/bluetooth') as f:
+            if 'NOPLUGIN_OPTION=""' in f.read():
+                print('** Fixing bluetooth service patch and restarting.. **'),
+                os.system("sed -i '/NOPLUGIN_OPTION=\"\"/d' /etc/init.d/bluetooth && service bluetooth restart")
         # set the device class to a keybord and set the name
         os.system("hciconfig " + self.if_name + " up")
         os.system("hciconfig " + self.if_name + " name \"" + self.bt_name + "\"")
