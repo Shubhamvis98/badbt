@@ -3,6 +3,9 @@
 from send_string import BtkStringClient
 from time import sleep
 import keymap
+import getopt
+import sys
+import os
 
 
 def modgen(keys):
@@ -39,16 +42,28 @@ def f_word(word, line):
         print('NOT FOUND: '+ word)
 
 
-### Runner Here
+if __name__ == "__main__":
+    if not os.geteuid() == 0:
+        sys.exit("[!]Run as root")
 
-with open("ducky.txt") as f:
-    txt = f.readlines()
+    sopts = 'hd:'
+    opts, args = getopt.getopt(sys.argv[1:], sopts)
 
-for i in range(len(txt)):
-    txt[i] = txt[i].strip()
+    for opt, arg in opts:
+        if opt == '-h':
+            print(f'\nUsage:\n\tpython {sys.argv[0]} -d [DUCKY_TXT]')
+            sys.exit()
+        elif opt == '-d':
+            ducky = arg
 
-ducky = BtkStringClient()
+        with open(ducky, 'r') as f:
+            txt = f.readlines()
 
-for line in range(len(txt)):
-    if txt[line]:
-        f_word(txt[line].split()[0], line)
+        for i in range(len(txt)):
+            txt[i] = txt[i].strip()
+
+        ducky = BtkStringClient()
+
+        for line in range(len(txt)):
+            if txt[line]:
+                f_word(txt[line].split()[0], line)
