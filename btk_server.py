@@ -19,9 +19,18 @@ import logging
 from logging import debug, info, warning, error
 import bluetooth
 from bluetooth import *
+import subprocess
+
+# TODO   File "/root/badbt/btk_server.py", line 166, in <module>
+#     myservice = BTKbService()
+#                 ^^^^^^^^^^^^^
+#   File "/root/badbt/btk_server.py", line 132, in __init__
+#     self.device.listen()
+#   File "/root/badbt/btk_server.py", line 97, in listen
+#     self.scontrol.bind((socket.BDADDR_ANY, self.P_CTRL))
+# OSError: [Errno 98] Address already in use
 
 logging.basicConfig(level=logging.DEBUG)
-
 
 class BTKbDevice():
     # change these constants
@@ -35,7 +44,8 @@ class BTKbDevice():
     # dbus path of the bluez profile we will create
     # file path of the sdp record to load
     SDP_RECORD_PATH = sys.path[0] + "/sdp_record.xml"
-    UUID = "00001124-0000-1000-8000-00805f9b34fb"
+    # UUID value must match Generic Attribute Profile UUID
+    UUID = subprocess.getoutput("bluetoothctl show | awk '/Generic Attribute Profile/' | awk -F'[()]' '{print $2}'")
 
     def __init__(self):
         print("2. Setting up BT device")
