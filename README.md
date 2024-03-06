@@ -20,8 +20,4 @@ Usage:
 
 ```
 - Execute `sudo python btk_server.py` to start the server.
-```
-Usage:
-        python ducky.py -d [DUCKY_TXT]
-```
-- In another terminal, run `sudo python ducky.py -d rubberducky_input.txt` to inject the keystrokes.
+- Execute `python ducky.py -d [rubberducky_script_path]` to inject rubberducky script.
