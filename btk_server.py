@@ -13,6 +13,7 @@ import dbus.service
 import dbus.mainloop.glib
 import time
 import socket
+import getopt
 from gi.repository import GLib
 from dbus.mainloop.glib import DBusGMainLoop
 import logging
@@ -24,11 +25,6 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class BTKbDevice():
-    # change these constants
-    MY_ADDRESS = "22:22:EA:CF:3C:1E"
-    MY_DEV_NAME = "My Keyboard"
-    MY_INTERFACE = "hci0"
-
     # define some constants
     P_CTRL = 17  # Service port - must match port configured in SDP record
     P_INTR = 19  # Interrupt port - must match port configured in SDP record
@@ -37,24 +33,27 @@ class BTKbDevice():
     SDP_RECORD_PATH = sys.path[0] + "/sdp_record.xml"
     UUID = "00001124-0000-1000-8000-00805f9b34fb"
 
-    def __init__(self):
+    def __init__(self, bt_name, if_name):
         print("2. Setting up BT device")
+        self.bt_name = bt_name
+        self.if_name = if_name
+        self.MY_ADDRESS = os.popen(f'hciconfig {self.if_name}').read().split()[7]
         self.init_bt_device()
         self.init_bluez_profile()
 
     # configure the bluetooth hardware device
     def init_bt_device(self):
-        print("3. Configuring Device name " + BTKbDevice.MY_DEV_NAME)
+        print("3. Configuring Device name: " + self.bt_name)
         # temporary patch
         with open('/etc/init.d/bluetooth') as f:
             if 'NOPLUGIN_OPTION=""' in f.read():
                 print('** Fixing bluetooth service patch and restarting.. **'),
                 os.system("sed -i '/NOPLUGIN_OPTION=\"\"/d' /etc/init.d/bluetooth && service bluetooth restart")
         # set the device class to a keybord and set the name
-        os.system("hciconfig " + BTKbDevice.MY_INTERFACE + " up")
-        os.system("hciconfig " + BTKbDevice.MY_INTERFACE + " name \"" + BTKbDevice.MY_DEV_NAME + "\"")
+        os.system("hciconfig " + self.if_name + " up")
+        os.system("hciconfig " + self.if_name + " name \"" + self.bt_name + "\"")
         # make the device discoverable
-        os.system("hciconfig " + BTKbDevice.MY_INTERFACE + " piscan")
+        os.system("hciconfig " + self.if_name + " piscan")
 
     # set up a bluez profile to advertise device capabilities from a loaded service record
     def init_bluez_profile(self):
@@ -69,9 +68,9 @@ class BTKbDevice():
         bus = dbus.SystemBus()
         manager = dbus.Interface(bus.get_object(
             "org.bluez", "/org/bluez"), "org.bluez.ProfileManager1")
-        manager.RegisterProfile("/org/bluez/" + BTKbDevice.MY_INTERFACE, BTKbDevice.UUID, opts)
+        manager.RegisterProfile("/org/bluez/" + self.if_name, BTKbDevice.UUID, opts)
         print("6. Profile registered ")
-        os.system("hciconfig " + BTKbDevice.MY_INTERFACE + " class 0x000540")
+        os.system("hciconfig " + self.if_name + " class 0x000540")
 
     # read and return an sdp record from a file
     def read_sdp_service_record(self):
@@ -117,7 +116,7 @@ class BTKbDevice():
 
 class BTKbService(dbus.service.Object):
 
-    def __init__(self):
+    def __init__(self, bt_name, if_name):
         print("1. Setting up service")
         # set up as a dbus service
         bus_name = dbus.service.BusName(
@@ -125,7 +124,7 @@ class BTKbService(dbus.service.Object):
         dbus.service.Object.__init__(
             self, bus_name, "/org/thanhle/btkbservice")
         # create and setup our device
-        self.device = BTKbDevice()
+        self.device = BTKbDevice(bt_name, if_name)
         # start listening for connections
         self.device.listen()
 
@@ -155,13 +154,27 @@ class BTKbService(dbus.service.Object):
 
 # main routine
 if __name__ == "__main__":
-    # we an only run as root
-    try:
-        if not os.geteuid() == 0:
-            sys.exit("Only root can run this script")
+    if not os.geteuid() == 0:
+        sys.exit("[!]Run as root")
 
+    MY_DEV_NAME = "Keyboard"
+    bt_name = MY_DEV_NAME
+    if_name = 'hci0'
+    sopts = 'hn:i:'
+    opts, args = getopt.getopt(sys.argv[1:], sopts)
+
+    for opt, arg in opts:
+        if opt == '-h':
+            print(f'\nUsage:\n\tpython {sys.argv[0]} -n [BT_NAME] -i [INTERFACE]\n\n\tDefault Values:\n\t\tBT_NAME:\t{bt_name}\n\t\tINTERFACE:\t{if_name}')
+            sys.exit()
+        elif opt == '-n':
+            bt_name = arg
+        elif opt == '-i':
+            if_name = arg
+
+    try:
         DBusGMainLoop(set_as_default=True)
-        myservice = BTKbService()
+        myservice = BTKbService(bt_name, if_name)
         loop = GLib.MainLoop()
         loop.run()
     except KeyboardInterrupt:
