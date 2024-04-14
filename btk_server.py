@@ -37,7 +37,7 @@ class BTKbDevice():
         print("2. Setting up BT device")
         self.bt_name = bt_name
         self.if_name = if_name
-        self.MY_ADDRESS = os.popen(f'hciconfig {self.if_name}').read().split()[7]
+        self.if_addr = if_addr
         self.init_bt_device()
         self.init_bluez_profile()
 
@@ -161,16 +161,22 @@ if __name__ == "__main__":
     bt_name = MY_DEV_NAME
     if_name = 'hci0'
     sopts = 'hn:i:'
+    if_class = '0x000540'
+    if_addr = '22:22:EA:CF:3C:1E'
     opts, args = getopt.getopt(sys.argv[1:], sopts)
 
     for opt, arg in opts:
         if opt == '-h':
-            print(f'\nUsage:\n\tpython {sys.argv[0]} -n [BT_NAME] -i [INTERFACE]\n\n\tDefault Values:\n\t\tBT_NAME:\t{bt_name}\n\t\tINTERFACE:\t{if_name}')
+            print(f'\nUsage:\n\tpython {sys.argv[0]} -n [BT_NAME] -i [INTERFACE] -i [CLASS] -a [ADDRESS]\n\n\tDefault Values:\n\t\tBT_NAME:\t{bt_name}\n\t\tINTERFACE:\t{if_name}\n\t\tCLASS:\t{if_class}\n\t\tADDRESS:\t{if_addr}')
             sys.exit()
         elif opt == '-n':
             bt_name = arg
         elif opt == '-i':
             if_name = arg
+        elif opt == '-c':
+            if_class = arg
+        elif opt == '-a':
+            if_addr = arg
 
     try:
         DBusGMainLoop(set_as_default=True)
