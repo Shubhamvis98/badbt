@@ -37,7 +37,8 @@ class BTKbDevice():
         print("2. Setting up BT device")
         self.bt_name = bt_name
         self.if_name = if_name
-        self.if_addr = if_addr
+        self.MY_ADDRESS = if_addr
+        self.if_class = if_class
         self.init_bt_device()
         self.init_bluez_profile()
 
@@ -70,7 +71,7 @@ class BTKbDevice():
             "org.bluez", "/org/bluez"), "org.bluez.ProfileManager1")
         manager.RegisterProfile("/org/bluez/" + self.if_name, BTKbDevice.UUID, opts)
         print("6. Profile registered ")
-        os.system("hciconfig " + self.if_name + " class 0x000540")
+        os.system("hciconfig " + self.if_name + " class " + self.if_class)
 
     # read and return an sdp record from a file
     def read_sdp_service_record(self):
@@ -160,7 +161,7 @@ if __name__ == "__main__":
     MY_DEV_NAME = "Keyboard"
     bt_name = MY_DEV_NAME
     if_name = 'hci0'
-    sopts = 'hn:i:'
+    sopts = 'hn:i:c:a'
     if_class = '0x000540'
     if_addr = '22:22:EA:CF:3C:1E'
     opts, args = getopt.getopt(sys.argv[1:], sopts)
