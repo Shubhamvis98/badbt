@@ -158,9 +158,8 @@ if __name__ == "__main__":
         sys.exit("[!]Run as root")
 
     MY_DEV_NAME = "Keyboard"
-    MY_INTERFACE = "hci0"
     bt_name = MY_DEV_NAME
-    if_name = MY_INTERFACE
+    if_name = 'hci0'
     sopts = 'hn:i:'
     opts, args = getopt.getopt(sys.argv[1:], sopts)
 
