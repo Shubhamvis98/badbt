@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
     for opt, arg in opts:
         if opt == '-h':
-            print(f'\nUsage:\n\tpython {sys.argv[0]} -n [BT_NAME] -i [INTERFACE] -i [CLASS] -a [ADDRESS]\n\n\tDefault Values:\n\t\tBT_NAME:\t{bt_name}\n\t\tINTERFACE:\t{if_name}\n\t\tCLASS:\t{if_class}\n\t\tADDRESS:\t{if_addr}')
+            print(f'\nUsage:\n\tpython {sys.argv[0]} -n [BT_NAME] -i [INTERFACE] -c [CLASS] -a [ADDRESS]\n\n\tDefault Values:\n\t\tBT_NAME:\t{bt_name}\n\t\tINTERFACE:\t{if_name}\n\t\tCLASS:\t{if_class}\n\t\tADDRESS:\t{if_addr}')
             sys.exit()
         elif opt == '-n':
             bt_name = arg
