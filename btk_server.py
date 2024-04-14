@@ -158,10 +158,8 @@ if __name__ == "__main__":
     if not os.geteuid() == 0:
         sys.exit("[!]Run as root")
 
-    MY_DEV_NAME = "Keyboard"
-    MY_INTERFACE = "hci0"
-    bt_name = MY_DEV_NAME
-    if_name = MY_INTERFACE
+    bt_name = "Keyboard"
+    if_name = "hci0"
     sopts = 'hn:i:c:a'
     if_class = '0x000540'
     if_addr = '22:22:EA:CF:3C:1E'
