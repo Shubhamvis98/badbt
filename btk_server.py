@@ -22,13 +22,7 @@ import bluetooth
 from bluetooth import *
 import subprocess
 
-# TODO   File "/root/badbt/btk_server.py", line 166, in <module>
-#     myservice = BTKbService()
-#                 ^^^^^^^^^^^^^
-#   File "/root/badbt/btk_server.py", line 132, in __init__
-#     self.device.listen()
-#   File "/root/badbt/btk_server.py", line 97, in listen
-#     self.scontrol.bind((socket.BDADDR_ANY, self.P_CTRL))
+# UUID Fix
 # OSError: [Errno 98] Address already in use
 
 logging.basicConfig(level=logging.DEBUG)
@@ -178,7 +172,7 @@ if __name__ == "__main__":
 
     for opt, arg in opts:
         if opt == '-h':
-            print(f'\nUsage:\n\tpython {sys.argv[0]} -n [BT_NAME] -i [INTERFACE] -i [CLASS] -a [ADDRESS]\n\n\tDefault Values:\n\t\tBT_NAME:\t{bt_name}\n\t\tINTERFACE:\t{if_name}\n\t\tCLASS:\t{if_class}\n\t\tADDRESS:\t{if_addr}')
+            print(f'\nUsage:\n\tpython {sys.argv[0]} -n [BT_NAME] -i [INTERFACE] -c [CLASS] -a [ADDRESS]\n\n\tDefault Values:\n\t\tBT_NAME:\t{bt_name}\n\t\tINTERFACE:\t{if_name}\n\t\tCLASS:\t{if_class}\n\t\tADDRESS:\t{if_addr}')
             sys.exit()
         elif opt == '-n':
             bt_name = arg
