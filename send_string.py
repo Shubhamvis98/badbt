@@ -56,7 +56,6 @@ class BtkStringClient():
             "?": "key_slash",
             " ": "KEY_SPACE",
             "\n": "KEY_ENTER",
-            "\h": "KEY_HOME"
         }
 
         # connect with the Bluetooth keyboard server
