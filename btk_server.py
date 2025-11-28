@@ -22,6 +22,82 @@ import bluetooth
 from bluetooth import *
 import subprocess
 
+# No PIN and auto Accept pairing fix
+# Bluetoot Classic NoInputNoOutputAgent - return UUID Classic
+# Select Class Of Device (CoD)
+
+DEVICE_COD = {
+    # ===== Android / Generic Devices =====
+    "carkit":      '0x420408',  # MAP/PBAP/HFP-enabled Car profile
+    "keyboard":    '0x000540',  # Peripheral / Keyboard
+    "mouse":       '0x000580',  # Peripheral / mouse
+    "airbuds":     '0x240418',  # Audio/Video + Headset + CarKit/Handsfree
+    "audio":       '0x240404',  # Generic audio sink (A2DP/AVRCP)
+    "smartwatch":  '0x007004',  # Wearable (Watch)
+    "healthband":  '0x007008',  # Wearable (Health tracker)
+    "smartphone":  '0x020C00',  # Phone / Smartphone
+
+    # ===== Apple variants (Apple uses slightly different CoDs) =====
+    "iphone":      '0x020C00',  # Same as smartphone (Apple does not special-code iPhone)
+    "airpods":     '0x240418',  # Handsfree + Audio (same as buds)
+    "applewatch":  '0x007004',  # Same as smartwatch
+}
+
+device_type = "audio"
+
+# No PIN Just Work Agent
+class NoInputNoOutputAgent(dbus.service.Object):
+    def __init__(self, bus, path):
+        super().__init__(bus, path)
+        self.bus = bus
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="", out_signature="")
+    def Release(self):
+        print("[AGENT] Released")
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="")
+    def RequestPinCode(self, device):
+        print("[AGENT] RequestPinCode -> Reject")
+        raise dbus.DBusException("org.bluez.Error.Rejected", "No pin code supported")
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="u")
+    def RequestPasskey(self, device):
+        print("[AGENT] RequestPasskey -> Reject")
+        raise dbus.DBusException("org.bluez.Error.Rejected", "No passkey supported")
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="ou", out_signature="")
+    def RequestConfirmation(self, device, passkey):
+        # Auto-accept Just Works pairing
+        print(f"[AGENT] RequestConfirmation for {device} passkey={passkey} -> AUTO-ACCEPT")
+        return
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="ou", out_signature="")
+    def DisplayPasskey(self, device, passkey):
+        # Phone may ask to *display* passkey — we ignore it silently
+        print(f"[AGENT] DisplayPasskey {device} passkey={passkey} (ignored)")
+        return
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="os", out_signature="")
+    def DisplayPinCode(self, device, pincode):
+        # Phone may ask to *display* pincode — we ignore it silently
+        print(f"[AGENT] DisplayPinCode {device} pincode={pincode} (ignored)")
+        return
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="os", out_signature="")
+    def AuthorizeService(self, device, uuid):
+        # Allow any service by default (not related to PIN)
+        print(f"[AGENT] AuthorizeService {device} uuid={uuid} -> ALLOW")
+        return
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="")
+    def RequestAuthorization(self, device):
+        print(f"[AGENT] RequestAuthorization for {device} -> allow")
+        return
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="", out_signature="")
+    def Cancel(self):
+        print("[AGENT] Cancel called")
+
 # UUID Fix
 # OSError: [Errno 98] Address already in use
 
@@ -34,8 +110,9 @@ class BTKbDevice():
     # dbus path of the bluez profile we will create
     # file path of the sdp record to load
     SDP_RECORD_PATH = sys.path[0] + "/sdp_record.xml"
-    # UUID value must match Generic Attribute Profile UUID
-    UUID = subprocess.getoutput("bluetoothctl show | awk '/Generic Attribute Profile/' | awk -F'[()]' '{print $2}'")
+    # UUID value: [SIG] Human Interface Device (HID) Profile - [Protocol] Bluetooth BR/EDR (Bluetooth Classic)
+    UUID = "00001124-0000-1000-8000-00805f9b34fb"
+    #UUID = "0000110B-0000-1000-8000-00805f9b34fb"
 
     def __init__(self, bt_name, if_name):
         print("2. Setting up BT device")
@@ -48,7 +125,7 @@ class BTKbDevice():
 
     # configure the bluetooth hardware device
     def init_bt_device(self):
-        print("3. Configuring Device name: " + self.bt_name)
+        print("3. Configuring Device name: \033[0;92m" + self.bt_name + "\033[0m")
         # temporary patch
         with open('/etc/init.d/bluetooth') as f:
             if 'NOPLUGIN_OPTION=""' in f.read():
@@ -62,24 +139,49 @@ class BTKbDevice():
 
     # set up a bluez profile to advertise device capabilities from a loaded service record
     def init_bluez_profile(self):
-        print("4. Configuring Bluez Profile")
+        # retrieve a proxy for the bluez agent and profile interface
+        bus = dbus.SystemBus()
+
+        # -----------------  Registering Custom DefaultAgent NoInputNoOutput ------------------
+        print("4. Registering NoInputNoOutput agent...")
+        AGENT_PATH = f"/org/bluez/agentNoIO"
+        agent = NoInputNoOutputAgent(bus, AGENT_PATH)
+
+        agent_manager = dbus.Interface(bus.get_object(
+            "org.bluez", "/org/bluez"), "org.bluez.AgentManager1")
+
+        # Register the agent
+        agent_manager.RegisterAgent(AGENT_PATH, "NoInputNoOutput")
+
+        # Make the Agent the global default (required for NO-PIN pairing)
+        try:
+            print("    Requesting Default Agent...")
+            agent_manager.RequestDefaultAgent(AGENT_PATH)
+            print("\033[0;92m    Custom agent registered\033[0m")
+        except Exception as e:
+            print("[WARN] RequestDefaultAgent failed (maybe another default agent exists):", e)
+        # -------------------------------------------------------------------------------------
+
+        print("5. Configuring Bluez Profile")
         # setup profile options
         service_record = self.read_sdp_service_record()
         opts = {
             "AutoConnect": True,
-            "ServiceRecord": service_record
+            "ServiceRecord": service_record,
+            "RequireAuthentication": False,
+            "RequireAuthorization": False,
+            "RequireSecurity": False
         }
-        # retrieve a proxy for the bluez profile interface
-        bus = dbus.SystemBus()
+
         manager = dbus.Interface(bus.get_object(
             "org.bluez", "/org/bluez"), "org.bluez.ProfileManager1")
         manager.RegisterProfile("/org/bluez/" + self.if_name, BTKbDevice.UUID, opts)
-        print("6. Profile registered ")
+        print("7. Profile registered ")
         os.system("hciconfig " + self.if_name + " class " + self.if_class)
 
     # read and return an sdp record from a file
     def read_sdp_service_record(self):
-        print("5. Reading service record")
+        print("6. Reading service record")
         try:
             fh = open(BTKbDevice.SDP_RECORD_PATH, "r")
         except:
@@ -88,7 +190,7 @@ class BTKbDevice():
 
     # listen for incoming client connections
     def listen(self):
-        print("\033[0;33m7. Waiting for connections\033[0m")
+        print("\033[0;33m8. Waiting for connections\033[0m")
         self.scontrol = socket.socket(
             socket.AF_BLUETOOTH, socket.SOCK_SEQPACKET, socket.BTPROTO_L2CAP)  # BluetoothSocket(L2CAP)
         self.sinterrupt = socket.socket(
@@ -162,10 +264,11 @@ if __name__ == "__main__":
     if not os.geteuid() == 0:
         sys.exit("[!]Run as root")
 
-    bt_name = "Keyboard"
+    bt_name = device_type
     if_name = "hci0"
     sopts = 'hn:i:c:a'
-    if_class = '0x000540'
+    #if_class = '0x000540'
+    if_class = DEVICE_COD[device_type]
     if_addr = '22:22:EA:CF:3C:1E'
     opts, args = getopt.getopt(sys.argv[1:], sopts)
 
