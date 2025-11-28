@@ -1,20 +1,46 @@
 #!/bin/bash
 
 svc='/usr/lib/systemd/system/bluetooth.service'
+CONF="/etc/bluetooth/main.conf"
+PROP="JustWorksRepairing"
+VALUE="always"
+REGEX="^[[:space:]]*#?[[:space:]]*${PROP}[[:space:]]*="
 
 [ `id -u` -ne 0  ] && echo '[!]Run as root' && exit
 
 if [ -f bluetooth.service.bk ]
 then
-	echo '[*]Restore stock svc file'
+	echo "[*]Restore stock ${svc} file"
 	mv bluetooth.service.bk $svc
 else
-	echo '[*]Backup stock and place badbt svc file'
+	echo "[*]Backup stock and place badbt ${svc} file"
 	cp $svc bluetooth.service.bk
 	cp bluetooth.service $svc
 fi
 
-echo '[*]Daemon reload and restart bt svc'
+
+# Fix JustWorksRepairing in /etc/bluetooth/main.conf
+
+if [ -f main.conf.bk ]
+then
+	echo "[*]Restore stock ${CONF} file"
+	mv main.conf.bk $CONF
+else
+
+	echo "[*]Backup stock ${CONF} file"
+	cp $CONF main.conf.bk
+
+	if grep -Eq "$REGEX" "$CONF"
+	then
+		echo "[*]Replace ${PROP} as ${VALUE} in ${CONF} file"
+		sed -i -E "s|${REGEX}.*|${PROP} = ${VALUE}|" "$CONF"
+	else
+		echo "[*]${PROP} not found, appending at end…"
+		echo "${PROP} = ${VALUE}" >> "$CONF"
+	fi
+fi
+
+echo "[*]Daemon reload and restart ${svc}"
 systemctl daemon-reload
 systemctl restart bluetooth
 
