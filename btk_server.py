@@ -264,7 +264,7 @@ if __name__ == "__main__":
     if not os.geteuid() == 0:
         sys.exit("[!]Run as root")
 
-    bt_name = device_type
+    bt_name = 'Keyboard'
     if_name = "hci0"
     sopts = 'hn:i:c:a'
     #if_class = '0x000540'
