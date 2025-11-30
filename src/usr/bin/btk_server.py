@@ -109,7 +109,7 @@ class BTKbDevice():
     P_INTR = 19  # Interrupt port - must match port configured in SDP record
     # dbus path of the bluez profile we will create
     # file path of the sdp record to load
-    SDP_RECORD_PATH = sys.path[0] + "/sdp_record.xml"
+    SDP_RECORD_PATH = "/usr/lib/in.fossfrog.badbt/sdp_record.xml"
     # UUID value: [SIG] Human Interface Device (HID) Profile - [Protocol] Bluetooth BR/EDR (Bluetooth Classic)
     UUID = "00001124-0000-1000-8000-00805f9b34fb"
     #UUID = "0000110B-0000-1000-8000-00805f9b34fb"
